@@ -22,6 +22,7 @@ class TestRoutes(TestCase):
         )
 
     def test_no_loginrequired_pages_availability(self):
+        """Доступность страниц для пользователей без регистрации."""
         urls = (
             'notes:home',
             'users:login',
@@ -32,9 +33,12 @@ class TestRoutes(TestCase):
             with self.subTest(name=name):
                 url = reverse(name)
                 response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertEqual(response.status_code, HTTPStatus.OK,
+                                 f'Убедитесь, что на страницу {url}'
+                                 ' есть доступ пользователю без регистрации.')
 
     def test_loginrequired_pages_availability(self):
+        """Доступность страниц для разных пользователей."""
         urls = (
             ('notes:detail', (self.notes.slug,)),
             ('notes:edit', (self.notes.slug,)),
@@ -50,9 +54,12 @@ class TestRoutes(TestCase):
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=args)
                     response = self.client.get(url)
-                    self.assertEqual(response.status_code, status)
+                    self.assertEqual(response.status_code, status,
+                                     f'Убедитесь, что на страницу {url}'
+                                     ' есть доступ нужному пользователю.')
 
     def test_only_logined_pages_availability(self):
+        """Доступность страниц для зарегитрированных пользователей."""
         urls = (
             'notes:add',
             'notes:success',
@@ -63,9 +70,12 @@ class TestRoutes(TestCase):
             with self.subTest(user=self.author, name=name):
                 url = reverse(name)
                 response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertEqual(response.status_code, HTTPStatus.OK,
+                                 f'Убедитесь, что на страницу {url} есть'
+                                 ' доступ зарегистрированному пользователю.')
 
     def test_redirect_for_anonymous_client(self):
+        """Проверка редиректов для пользователей без регистрации."""
         urls = (
             ('notes:detail', (self.notes.slug,)),
             ('notes:edit', (self.notes.slug,)),
@@ -80,4 +90,7 @@ class TestRoutes(TestCase):
                 url = reverse(name, args=args)
                 redirect_url = f'{login_url}?next={url}'
                 response = self.client.get(url)
-                self.assertRedirects(response, redirect_url)
+                self.assertRedirects(response, redirect_url,
+                                     'Убедитесь, что пользователь без'
+                                     ' регистрации при переходе на страницу'
+                                     f' {url} перенаправлятся на логин.')
